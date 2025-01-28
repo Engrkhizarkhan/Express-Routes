@@ -1,67 +1,70 @@
 import express from 'express';
 const apiRoutes = express.Router();
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
-const Users = [
-    {id: 1,  name: 'John Doe'},
-    {id: 2,  name: 'Jane Doe'},
-    {id: 3,  name: 'Jim Doe'},
-    {id: 4,  name: 'Jill Doe'},
-]
+// Connect to the database
+dotenv.config();
+mongoose.connect(process.env.mongodb_URI);
+const db = mongoose.connection;
+db.on('error', (error) => console.error(error));
+db.once('open', () => console.log('Connected to Database'));
+
+// Schema
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true }
+});
+const User = mongoose.model('user', userSchema);
+
 // Get All Users
-apiRoutes.get('/users', (req, res) => {
-    res.json(Users);
+apiRoutes.get('/users', async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (error) {
+        res.status(400).json({ error: error });
+    }
 });
 
 // Get User By Id
-apiRoutes.get('/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const user = Users.find(user => user.id === id);
-    if (!user) {
-        return res.status(404).json({ name: 'User not found' });
+apiRoutes.get('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        res.json(user);
+    } catch (error) {
+        res.status(400).json({ error: error });
     }
-    res.json(user);
 });
 
 // Add New User
-apiRoutes.post('/users', (req, res) => {
-    console.log(req.body);
-    const { name } = req.body;
-    if (!name) {
-        return res.status(400).json({ error: 'Name is required.' });
+apiRoutes.post('/users', async (req, res) => {
+    try {
+        const user = new User({ name: req.body.name });
+        await user.save();
+        res.status(201).json({ message: 'User added successfully!', user: user });
+    } catch (error) {
+        res.status(400).json({ error: error });
     }
-
-    Users.push(name);
-    res.status(201).json({ message: 'User added successfully!', user: name });
 });
 
-
-
 // Update User
-apiRoutes.put('/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const user = Users.find(user => user.id === id);
-    if (!user) {
-        return res.status(404).json({ name: 'User not found' });
+apiRoutes.put('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findByIdAndUpdate(req.params.id, { name: req.body.name }, { new: true });
+        res.status(201).json({ message: 'User updated successfully!', user: user });
+    } catch (error) {
+        res.status(400).json({ error: error });
     }
-    user.name = req.body.name;
-    if (!user.name) {
-        return res.status(400).json({ error: 'Name is required.' });
-    }
-    res.status(201).json({ message: 'User updated successfully!', user });
 });
 
 // Delete User
-apiRoutes.delete('/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const user = Users.find(user => user.id === id);
-    if (!user) {
-        return res.status(404).json({ name: 'User not found' });
+apiRoutes.delete('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        res.status(201).json({ message: 'User deleted successfully!', user: user });
+    } catch (error) {
+        res.status(400).json({ error: error });
     }
-    Users.splice(Users.indexOf(user), 1);
-    res.status(201).json({
-         message: 'User deleted successfully!',
-         name: user.name,
-        });
 });
 
 export default apiRoutes;
