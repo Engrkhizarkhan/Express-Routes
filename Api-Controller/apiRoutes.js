@@ -3,8 +3,8 @@ const apiRoutes = express.Router();
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-// Connect to the database
 dotenv.config();
+// Connect to the database
 mongoose.connect(process.env.mongodb_URI);
 const db = mongoose.connection;
 db.on('error', (error) => console.error(error));
@@ -27,9 +27,13 @@ apiRoutes.get('/users', async (req, res) => {
 });
 
 // Get User By Id
-apiRoutes.get('/users/:id', async (req, res) => {
+apiRoutes.get('/users/:name', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ name: new RegExp(req.params.name, 'i') });
+        
+        if (!user || user.name.toLowerCase() !== req.params.name.toLowerCase()) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
         res.json(user);
     } catch (error) {
         res.status(400).json({ error: error });
