@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
     subject: { type: String, required: true },
-    message: { type: String, required: true }
+    message: { type: String, required: true },
+    Timestamp: { type: Date, default: Date.now }
 })
 const formMessage = mongoose.model('formMessage', userSchema);
 
@@ -48,5 +49,15 @@ apiRoutes.get('/messages', async (req, res) => {
         }
 });
 
+// Delete Singal Form Data By ID
+apiRoutes.delete('/formResponse/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await formMessage.findByIdAndDelete(id);
+        res.json({ message: 'Form deleted successfully!' });
+    } catch (error) {
+        res.status(400).json({ error: error });
+    }
+});
 
 export default apiRoutes;
