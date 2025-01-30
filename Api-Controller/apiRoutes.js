@@ -33,6 +33,10 @@ apiRoutes.post('/about', async (req, res) => {
         const { name, email, subject, message } = req.body;
         const formData = new formMessage({ name, email, subject, message });
         await formData.save();
+
+        // Emit the new message to all connected clients
+        req.app.get('io').emit('newMessage', formData);
+
         res.status(201).json({ message: 'Form submitted successfully!', formData: formData });
     } catch (error) {
         res.status(400).json({ error: error });
@@ -54,6 +58,10 @@ apiRoutes.delete('/formResponse/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await formMessage.findByIdAndDelete(id);
+
+        // Emit the deleted message ID to all connected clients
+        req.app.get('io').emit('deleteMessage', id);
+
         res.json({ message: 'Form deleted successfully!' });
     } catch (error) {
         res.status(400).json({ error: error });
