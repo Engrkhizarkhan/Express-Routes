@@ -19,10 +19,10 @@ connectDB();
 
 // Schema
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    subject: { type: String, required: true },
-    message: { type: String, required: true },
+    name: { type: String, required: true, trim: true, minlength: 3 , maxlength: 50 },
+    email: { type: String, required: true, unique: true, trim: true, minlength: 5, maxlength: 50 },
+    subject: { type: String, required: true, trim: true, minlength: 5, maxlength: 50 },
+    message: { type: String, required: true, trim: true, minlength: 10},
     Timestamp: { type: Date, default: Date.now }
 })
 const formMessage = mongoose.model('formMessage', userSchema);
