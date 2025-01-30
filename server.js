@@ -7,12 +7,12 @@ import notFound from './Middleware/errHandling.js';
 
 
 dotenv.config();
-const port = process.env.PORT;
+const port = process.env.PORT || 8000;
 const app = express();
 
 //Body parser
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware
 app.use(requestEndpoints);

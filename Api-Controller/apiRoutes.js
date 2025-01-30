@@ -1,74 +1,52 @@
 import express from 'express';
-const apiRoutes = express.Router();
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 dotenv.config();
+const apiRoutes = express.Router();
 // Connect to the database
-mongoose.connect(process.env.mongodb_URI);
-const db = mongoose.connection;
-db.on('error', (error) => console.error(error));
-db.once('open', () => console.log('Connected to Database'));
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.mongodb_URI);
+        const db = mongoose.connection;
+        console.log(`MongoDB Connected: ${db.host}`.cyan.underline);
+} catch (error) {
+    console.log(`MongoDB connection Error:`, error);
+    setTimeout(connectDB, 5000); // try to connect after 5 seconds
+    }
+}
+connectDB();
 
 // Schema
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true }
-});
-const User = mongoose.model('user', userSchema);
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    subject: { type: String, required: true },
+    message: { type: String, required: true }
+})
+const formMessage = mongoose.model('formMessage', userSchema);
 
-// Get All Users
-apiRoutes.get('/users', async (req, res) => {
+// Save Form Data 
+apiRoutes.post('/about', async (req, res) => {
     try {
-        const users = await User.find();
-        res.json(users);
+        const { name, email, subject, message } = req.body;
+        const formData = new formMessage({ name, email, subject, message });
+        await formData.save();
+        res.status(201).json({ message: 'Form submitted successfully!', formData: formData });
     } catch (error) {
         res.status(400).json({ error: error });
     }
 });
 
-// Get User By Id
-apiRoutes.get('/users/:name', async (req, res) => {
-    try {
-        const user = await User.findOne({ name: new RegExp(req.params.name, 'i') });
-        
-        if (!user || user.name.toLowerCase() !== req.params.name.toLowerCase()) {
-            return res.status(404).json({ message: 'User not found!' });
+// Get All Form Data
+apiRoutes.get('/messages', async (req, res) => {
+        try {
+            const formMessages = await formMessage.find();
+            res.json(formMessages);
+        } catch (error) {
+            res.status(400).json({ error: error });
         }
-        res.json(user);
-    } catch (error) {
-        res.status(400).json({ error: error });
-    }
 });
 
-// Add New User
-apiRoutes.post('/users', async (req, res) => {
-    try {
-        const user = new User({ name: req.body.name });
-        await user.save();
-        res.status(201).json({ message: 'User added successfully!', user: user });
-    } catch (error) {
-        res.status(400).json({ error: error });
-    }
-});
-
-// Update User
-apiRoutes.put('/users/:id', async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(req.params.id, { name: req.body.name }, { new: true });
-        res.status(201).json({ message: 'User updated successfully!', user: user });
-    } catch (error) {
-        res.status(400).json({ error: error });
-    }
-});
-
-// Delete User
-apiRoutes.delete('/users/:id', async (req, res) => {
-    try {
-        const user = await User.findByIdAndDelete(req.params.id);
-        res.status(201).json({ message: 'User deleted successfully!', user: user });
-    } catch (error) {
-        res.status(400).json({ error: error });
-    }
-});
 
 export default apiRoutes;
