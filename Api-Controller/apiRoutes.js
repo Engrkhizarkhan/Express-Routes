@@ -21,7 +21,7 @@ connectDB();
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true, minlength: 3 , maxlength: 50 },
     email: { type: String, required: true, trim: true, minlength: 5, maxlength: 50 },
-    subject: { type: String, required: true, trim: true, minlength: 5, maxlength: 50 },
+    subject: { type: String, required: true, trim: true, minlength: 3, maxlength: 50 },
     message: { type: String, required: true, trim: true, minlength: 10},
     Timestamp: { type: Date, default: Date.now }
 })
@@ -39,7 +39,7 @@ apiRoutes.post('/about', async (req, res) => {
 
         res.status(201).json({ message: 'Form submitted successfully!', formData: formData });
     } catch (error) {
-        res.status(400).json({ error: error });
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -49,7 +49,7 @@ apiRoutes.get('/messages', async (req, res) => {
             const formMessages = await formMessage.find();
             res.json(formMessages);
         } catch (error) {
-            res.status(400).json({ error: error });
+            res.status(400).json({ error: error.message });
         }
 });
 
@@ -64,7 +64,7 @@ apiRoutes.delete('/formResponse/:id', async (req, res) => {
 
         res.json({ message: 'Form deleted successfully!' });
     } catch (error) {
-        res.status(400).json({ error: error });
+        res.status(400).json({ error: error.message });
     }
 });
 
